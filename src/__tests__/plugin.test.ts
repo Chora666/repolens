@@ -672,6 +672,51 @@ describe("RepoLensPlugin lifecycle", () => {
     }
   })
 
+  it("allows a first full-file read after earlier range reads", async () => {
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-range-then-full-"))
+    fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })
+    fs.mkdirSync(path.join(projectDir, ".lens"), { recursive: true })
+    fs.writeFileSync(path.join(projectDir, "src/api.ts"), "export function api() { return 1 }\n", "utf-8")
+    fs.writeFileSync(path.join(projectDir, ".lens", "config.json"), JSON.stringify({
+      ...defaultConfig,
+      mode: "strict",
+      large_file_policy: "off",
+    }), "utf-8")
+
+    try {
+      const handlers = await RepoLensPlugin({ project: { name: "test" }, directory: projectDir } as never)
+      const sessionID = "session-range-then-full"
+
+      await handlers.event!({ event: { type: "session.created", properties: { info: { id: sessionID } } } } as never)
+      await handlers["tool.execute.before"]!(
+        { tool: "Read", sessionID } as never,
+        { args: { filePath: "src/api.ts", offset: 1, limit: 5 } } as never,
+      )
+      await handlers["tool.execute.after"]!(
+        { tool: "Read", sessionID, args: { filePath: "src/api.ts", offset: 1, limit: 5 } } as never,
+        {} as never,
+      )
+
+      await handlers["tool.execute.before"]!(
+        { tool: "Read", sessionID } as never,
+        { args: { filePath: "src/api.ts" } } as never,
+      )
+      await handlers["tool.execute.after"]!(
+        { tool: "Read", sessionID, args: { filePath: "src/api.ts" } } as never,
+        {} as never,
+      )
+      await handlers.event!({ event: { type: "session.deleted", properties: { info: { id: sessionID } } } } as never)
+
+      const ledger = JSON.parse(fs.readFileSync(path.join(projectDir, ".lens", "token-ledger.json"), "utf-8"))
+      assert.strictEqual(ledger.sessions[0].full_reads, 1)
+      assert.strictEqual(ledger.sessions[0].range_reads, 1)
+      assert.strictEqual(ledger.sessions[0].repeated_reads_blocked, 0)
+      assert.strictEqual(ledger.sessions[0].events.some((event: { reason?: string }) => event.reason === "repeated_read"), false)
+    } finally {
+      fs.rmSync(projectDir, { recursive: true, force: true })
+    }
+  })
+
   it("lazily creates anatomy when OpenCode does not emit session.created", async () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-lazy-anatomy-"))
     fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })

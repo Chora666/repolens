@@ -104,7 +104,13 @@ interface ConfigCacheEntry {
 }
 
 let loadedConfigs: Map<string, ConfigCacheEntry> = new Map()
-interface ReadRecord { count: number; lastReadTime: number }
+interface ReadRecord {
+  fullCount: number
+  rangeCount: number
+  lastReadTime: number
+  lastFullReadTime?: number
+  lastRangeReadTime?: number
+}
 
 function getLensDir(projectDir: string): string {
   return path.join(projectDir, LENS_DIR)
@@ -1221,18 +1227,33 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
           }
         }
 
-        const record = currentState(sid).reads.get(filePath)
-        const count = (record?.count ?? 0) + 1
+        const stateForRead = currentState(sid)
+        const record = stateForRead.reads.get(filePath)
         const now = Date.now()
-        currentState(sid).reads.set(filePath, { count, lastReadTime: now })
+        if (readHasRange) {
+          const rangeCount = (record?.rangeCount ?? 0) + 1
+          stateForRead.reads.set(filePath, {
+            fullCount: record?.fullCount ?? 0,
+            rangeCount,
+            lastReadTime: now,
+            lastFullReadTime: record?.lastFullReadTime,
+            lastRangeReadTime: now,
+          })
+          appendMemory(projectDir, `Range read #${rangeCount}: ${filePath} (bypassed — has offset/limit)`)
+          return
+        }
+
+        const count = (record?.fullCount ?? 0) + 1
+        stateForRead.reads.set(filePath, {
+          fullCount: count,
+          rangeCount: record?.rangeCount ?? 0,
+          lastReadTime: now,
+          lastFullReadTime: now,
+          lastRangeReadTime: record?.lastRangeReadTime,
+        })
 
         if (count === 2) {
-          const hasRange = hasReadRange(args)
-          if (hasRange) {
-            appendMemory(projectDir, `Range read #2: ${filePath} (bypassed)`)
-            return
-          }
-          const elapsedMin = record ? Math.round((now - record.lastReadTime) / 60000) : 0
+          const elapsedMin = record?.lastFullReadTime ? Math.round((now - record.lastFullReadTime) / 60000) : 0
           const elapsed = elapsedMin > 0 ? `${elapsedMin} min ago` : "earlier this session"
           const tokenInfo = entry ? ` (~${entry.tokens} tok)` : ""
 
@@ -1266,39 +1287,34 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
         }
 
         if (count >= 3) {
-          const hasRange = hasReadRange(args)
-          if (!hasRange) {
-            const elapsedMin = record ? Math.round((now - record.lastReadTime) / 60000) : 0
-            const elapsed = elapsedMin > 0 ? `${elapsedMin} min ago` : "earlier this session"
-            const sections = currentState(sid).sections.get(filePath)
-            let sectionsBlock = ""
-            if (sections && sections.length > 0) {
-              sectionsBlock = "\n\nKey sections:\n  " + sections.slice(0, 6).join("\n  ")
-            }
+          const elapsedMin = record?.lastFullReadTime ? Math.round((now - record.lastFullReadTime) / 60000) : 0
+          const elapsed = elapsedMin > 0 ? `${elapsedMin} min ago` : "earlier this session"
+          const sections = currentState(sid).sections.get(filePath)
+          let sectionsBlock = ""
+          if (sections && sections.length > 0) {
+            sectionsBlock = "\n\nKey sections:\n  " + sections.slice(0, 6).join("\n  ")
+          }
 
-            const msg = `[RepoLens] Still re-reading ${filePath} (#${count}). Last read ${elapsed}.` +
-                sectionsBlock +
-                "\n\nUse offset/limit to read specific sections, or grep for targeted searches." +
-                "\nRepeating the same full read will continue to be blocked."
+          const msg = `[RepoLens] Still re-reading ${filePath} (#${count}). Last read ${elapsed}.` +
+              sectionsBlock +
+              "\n\nUse offset/limit to read specific sections, or grep for targeted searches." +
+              "\nRepeating the same full read will continue to be blocked."
 
-            if (skipRepeatedReadGuard) {
-              appendMemory(projectDir, `Repeated-read guard skipped for large full read retry: ${filePath}`)
-            } else if (shouldBlock(config, entry?.tokens)) {
-              currentState(sid).repeatedBlocked++
-              recordSessionEvent(sid, {
-                tool: "read",
-                file: filePath,
-                read_kind: "full",
-                outcome: "blocked",
-                reason: "repeated_read",
-                tokens_estimated: estimatedTokens,
-              })
-              throw new Error(msg)
-            } else {
-              console.warn(msg)
-            }
+          if (skipRepeatedReadGuard) {
+            appendMemory(projectDir, `Repeated-read guard skipped for large full read retry: ${filePath}`)
+          } else if (shouldBlock(config, entry?.tokens)) {
+            currentState(sid).repeatedBlocked++
+            recordSessionEvent(sid, {
+              tool: "read",
+              file: filePath,
+              read_kind: "full",
+              outcome: "blocked",
+              reason: "repeated_read",
+              tokens_estimated: estimatedTokens,
+            })
+            throw new Error(msg)
           } else {
-            appendMemory(projectDir, `Range read #${count}: ${filePath} (bypassed — has offset/limit)`)
+            console.warn(msg)
           }
         }
         return
@@ -1412,7 +1428,7 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
 
         const record = currentState(sid).reads.get(filePath)
 
-        if (record && record.count === 1) {
+        if (record && record.fullCount === 1) {
           try {
             const absPath = path.join(projectDir, filePath)
             if (fs.existsSync(absPath)) {

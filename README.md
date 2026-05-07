@@ -1,6 +1,6 @@
 # RepoLens
 
-> **Beta Release.** RepoLens is functional and tested (32 unit + 9 integration scenarios), with real OpenCode CLI/Desktop smoke tests and DeepSeek V4 Pro trap-case evals for the large-file read-interception path. Token numbers are estimates and eval-scoped observations; use with awareness of the [limitations](#limitations) below. Dogfooding welcomed.
+> **Beta Release.** RepoLens is functional and tested (33 unit + 9 integration scenarios), with real OpenCode CLI/Desktop smoke tests and DeepSeek V4 Pro trap-case evals for the large-file read-interception path. Token numbers are estimates and eval-scoped observations; use with awareness of the [limitations](#limitations) below. Dogfooding welcomed.
 
 **Repo-aware context plugin for OpenCode.**  
 Repeat-read interception, file index, token tracking, and learning memory — zero workflow changes.

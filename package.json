@@ -1,6 +1,6 @@
 {
   "name": "@chora404/repolens",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Repo-aware context plugin for OpenCode — file index, token tracking, learning memory",
   "license": "MIT",
   "author": "Chora404",

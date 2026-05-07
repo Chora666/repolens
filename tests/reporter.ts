@@ -27,7 +27,7 @@ export function generateReport(results: ScenarioResult[]): string {
   lines.push("                    RepoLens Quantification Report")
   lines.push("═".repeat(88))
   lines.push(`Report generated: ${new Date().toISOString().replace("T", " ").slice(0, 19)}`)
-  lines.push("Plugin version: 1.0.0")
+  lines.push("Plugin version: 1.0.1")
   lines.push("")
   lines.push("Scenario               Calls  Blocked  Warned  Baseline(tok)  Saved(opt)  Opt%  Saved(cons)  Cons%")
   lines.push("─".repeat(88))
