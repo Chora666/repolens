@@ -2,24 +2,29 @@
   <title id="title">RepoLens architecture</title>
   <desc id="desc">OpenCode tool calls pass through RepoLens hooks, then update .lens files.</desc>
   <rect width="1280" height="640" fill="#0b0f14"/>
-  <text x="640" y="78" fill="#f4f8fb" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="44" font-weight="800" text-anchor="middle">How RepoLens fits into OpenCode</text>
-  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24" text-anchor="middle">
-    <rect x="160" y="164" width="250" height="84" rx="12" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
-    <text x="285" y="216" fill="#d7e3ee">OpenCode tool call</text>
-    <path d="M420 206H520" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
-    <path d="M506 192L522 206L506 220" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="532" y="164" width="250" height="84" rx="12" fill="#10251d" stroke="#28d17c" stroke-width="2"/>
-    <text x="657" y="216" fill="#28d17c">RepoLens hook</text>
-    <path d="M792 206H892" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
-    <path d="M878 192L894 206L878 220" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="904" y="164" width="250" height="84" rx="12" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
-    <text x="1029" y="216" fill="#d7e3ee">read/write/patch</text>
+  <text x="640" y="72" fill="#f4f8fb" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="38" font-weight="800" text-anchor="middle">How RepoLens fits into OpenCode</text>
 
-    <path d="M657 260V336" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
-    <path d="M643 322L657 338L671 322" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="338" y="360" width="638" height="142" rx="16" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
-    <text x="657" y="412" fill="#d7e3ee">.lens/anatomy.md</text>
-    <text x="657" y="452" fill="#d7e3ee">.lens/memory.md</text>
-    <text x="657" y="492" fill="#d7e3ee">.lens/token-ledger.json</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" text-anchor="middle">
+    <rect x="390" y="124" width="500" height="66" rx="12" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
+    <text x="640" y="165" fill="#d7e3ee">OpenCode tool call</text>
+
+    <path d="M640 204V248" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
+    <path d="M626 234L640 250L654 234" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="390" y="264" width="500" height="66" rx="12" fill="#10251d" stroke="#28d17c" stroke-width="2"/>
+    <text x="640" y="305" fill="#28d17c">RepoLens hook</text>
+
+    <path d="M640 344V388" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
+    <path d="M626 374L640 390L654 374" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="390" y="404" width="500" height="66" rx="12" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
+    <text x="640" y="445" fill="#d7e3ee">read / write / apply_patch</text>
+
+    <path d="M640 484V514" stroke="#536a83" stroke-width="4" stroke-linecap="round"/>
+    <path d="M626 500L640 516L654 500" stroke="#536a83" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="310" y="528" width="660" height="76" rx="14" fill="#111820" stroke="#2a3a4c" stroke-width="2"/>
+    <text x="640" y="560" fill="#d7e3ee">.lens/anatomy.md + memory.md</text>
+    <text x="640" y="592" fill="#d7e3ee">.lens/token-ledger.json</text>
   </g>
 </svg>
