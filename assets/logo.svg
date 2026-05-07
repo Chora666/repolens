@@ -1,0 +1,12 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RepoLens logo</title>
+  <desc id="desc">A file page inside a lens for RepoLens.</desc>
+  <rect width="512" height="512" rx="96" fill="#0b0f14"/>
+  <circle cx="236" cy="236" r="132" fill="#10251d" stroke="#28d17c" stroke-width="22"/>
+  <path d="M330 330L408 408" stroke="#28d17c" stroke-width="28" stroke-linecap="round"/>
+  <path d="M182 142H266L318 194V318H182V142Z" fill="#111820" stroke="#d7e3ee" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M266 144V198H318" stroke="#d7e3ee" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M212 228H288" stroke="#72d6ff" stroke-width="12" stroke-linecap="round"/>
+  <path d="M212 266H272" stroke="#72d6ff" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="306" cy="286" r="10" fill="#ffcf6e"/>
+</svg>

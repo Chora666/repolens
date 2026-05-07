@@ -1,0 +1,29 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RepoLens terminal preview</title>
+  <desc id="desc">Terminal-style preview showing RepoLens blocking a repeated full-file read and suggesting range reads.</desc>
+  <rect width="1280" height="640" rx="0" fill="#0b0f14"/>
+  <rect x="70" y="58" width="1140" height="524" rx="14" fill="#111820" stroke="#263241" stroke-width="2"/>
+  <rect x="70" y="58" width="1140" height="48" rx="14" fill="#1a232d"/>
+  <circle cx="102" cy="82" r="9" fill="#ff5f57"/>
+  <circle cx="132" cy="82" r="9" fill="#ffbd2e"/>
+  <circle cx="162" cy="82" r="9" fill="#28c840"/>
+  <text x="600" y="90" fill="#8ea2b8" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" text-anchor="middle">OpenCode + RepoLens</text>
+
+  <text x="112" y="160" fill="#8ea2b8" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">$ opencode</text>
+  <text x="112" y="210" fill="#d7e3ee" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25">Read src/api.ts</text>
+  <text x="112" y="250" fill="#28d17c" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25">RepoLens: first full read allowed</text>
+
+  <text x="112" y="326" fill="#d7e3ee" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25">Read src/api.ts again</text>
+  <rect x="104" y="352" width="856" height="122" rx="8" fill="#151d26" stroke="#33506a" stroke-width="1.5"/>
+  <text x="130" y="396" fill="#ffcf6e" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">[RepoLens] Re-reading file: src/api.ts (~207 tok).</text>
+  <text x="130" y="435" fill="#d7e3ee" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="23">Key sections: createAPI() L8, handleRequest() L11</text>
+  <text x="130" y="474" fill="#72d6ff" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="23">Prefer grep or offset/limit.</text>
+
+  <rect x="1000" y="164" width="120" height="120" rx="60" fill="#10251d" stroke="#28d17c" stroke-width="3"/>
+  <path d="M1032 224C1032 199.7 1051.7 180 1076 180C1100.3 180 1120 199.7 1120 224C1120 248.3 1100.3 268 1076 268C1051.7 268 1032 248.3 1032 224Z" fill="#152f27"/>
+  <path d="M1060 224L1072 236L1094 208" stroke="#28d17c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1060" y="330" fill="#d7e3ee" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="700" text-anchor="middle">RepoLens</text>
+  <text x="1060" y="370" fill="#8ea2b8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="20" text-anchor="middle">context guardrail</text>
+  <text x="1060" y="432" fill="#d7e3ee" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Read less.</text>
+  <text x="1060" y="466" fill="#d7e3ee" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Remember more.</text>
+</svg>

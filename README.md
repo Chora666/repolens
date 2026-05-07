@@ -1,25 +1,65 @@
 # RepoLens
 
-> **Beta Release.** RepoLens is functional and tested (33 unit + 9 integration scenarios), with real OpenCode CLI/Desktop smoke tests and DeepSeek V4 Pro trap-case evals for the large-file read-interception path. Token numbers are estimates and eval-scoped observations; use with awareness of the [limitations](#limitations) below. Dogfooding welcomed.
+Stop wasting context on the same file twice.
 
-**Repo-aware context plugin for OpenCode.**  
-Repeat-read interception, file index, token tracking, and learning memory — zero workflow changes.
+RepoLens is a context guardrail for OpenCode. It blocks wasteful repeat full-file
+reads, warns on large files, keeps lightweight repo memory, and tracks token
+usage without changing your workflow.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+![RepoLens terminal preview](assets/readme-hero.svg)
+
+> **Beta Release.** RepoLens is functional and tested (33 unit + 9 integration
+> scenarios), with real OpenCode CLI/Desktop smoke tests and DeepSeek V4 Pro
+> trap-case evals for the large-file read-interception path. Token numbers are
+> estimates and eval-scoped observations; use with awareness of the
+> [limitations](#limitations) below. Dogfooding welcomed.
 
 ---
 
 ## What Is RepoLens
 
-OpenCode is powerful but it works blind. It doesn't know what a file contains until it opens it. It can't tell a 50-token config from a 2,000-token module. It reads the same file multiple times in one session without noticing. It has no index of your project, no memory of your corrections, and no awareness of what it already tried.
+AI coding agents often re-read the same files, burn context, and forget what
+they already inspected. In large repos, legacy codebases, monorepos, or expensive
+model sessions, that waste adds up quickly.
 
-RepoLens gives OpenCode a second brain: a file index so it knows what files contain before reading them, a learning memory file for your preferences and past mistakes, and a token ledger for session bookkeeping. Runtime hooks surface this context during reads and writes.
+RepoLens hooks into OpenCode reads and writes. The first full-file read passes,
+duplicate full-file reads are blocked with section hints, range reads still work,
+and `.lens/` files keep a lightweight project map, memory log, and token ledger.
+
+```text
+Before RepoLens:
+read src/plugin.ts
+read src/plugin.ts
+read src/plugin.ts
+
+With RepoLens:
+1st full read allowed
+2nd full read blocked with section hints
+range read still allowed
+```
+
+![RepoLens before and after](assets/before-after.svg)
 
 ## Token Savings
 
-RepoLens intercepts repeat reads and surfaces project knowledge before writes, helping OpenCode make smarter context decisions.
+RepoLens is designed for context hygiene, not magic cost guarantees. Its strongest
+case is repeat-read-heavy workflows where an agent keeps opening the same file
+instead of using grep or offset/limit.
 
-In simulated testing (9 scenarios, 69 tool calls), RepoLens intercepted 30 tool calls: 26 repeat reads and 4 Cerebrum write warnings. Estimated savings were 49% optimistic or 39% conservative while respecting range reads, cerebrum rules, and mode configuration. See [TEST_REPORT.md](https://github.com/Chora666/repolens/blob/main/tests/TEST_REPORT.md) for full details.
+In plugin-level simulations, RepoLens intercepted 30/69 tool calls and showed
+39-49% estimated token reduction in repeat-read-heavy workflows while respecting
+range reads, cerebrum rules, and mode configuration. See
+[TEST_REPORT.md](https://github.com/Chora666/repolens/blob/main/tests/TEST_REPORT.md)
+for full details.
+
+| Evidence | Result |
+|----------|--------|
+| Unit tests | 33/33 passed |
+| Simulation scenarios | 9/9 passed |
+| Tool calls intercepted in simulations | 30/69 |
+| Estimated reduction in repeat-read-heavy simulations | 39-49% |
 
 Real OpenCode smoke tests on 2026-05-06 confirmed the main runtime behavior in CLI and Desktop: first full-file read succeeds, duplicate full-file read is blocked, offset/limit range read succeeds, and the token ledger is updated. See [REAL_OPENCODE_SMOKE.md](https://github.com/Chora666/repolens/blob/main/tests/REAL_OPENCODE_SMOKE.md).
 
@@ -150,6 +190,8 @@ Set `"enabled": false` to disable all RepoLens hooks without removing files.
 
 ## How It Works
 
+![RepoLens architecture](assets/architecture.svg)
+
 ### Repeat-Read Interception
 
 The plugin intercepts file reads and prevents unnecessary re-reading.
@@ -257,9 +299,19 @@ RepoLens is built for OpenCode's plugin API. Key points to be aware of:
 - **`cerebrum.md` depends on the AI following `REPOLENS.md` instructions.** Compliance is not guaranteed.
 - **Section extraction is regex-based** (TS, JS, Python, Go, Rust). Detects declarations, classes, and types but does not parse ASTs.
 
+## Visual Assets
+
+GitHub/social artwork lives in [`assets/`](https://github.com/Chora666/repolens/tree/main/assets):
+
+- [`social-preview.svg`](https://github.com/Chora666/repolens/blob/main/assets/social-preview.svg) - 1280x640 GitHub social preview source.
+- [`readme-hero.svg`](https://github.com/Chora666/repolens/blob/main/assets/readme-hero.svg) - README terminal preview.
+- [`before-after.svg`](https://github.com/Chora666/repolens/blob/main/assets/before-after.svg) - repeat-read comparison graphic.
+- [`architecture.svg`](https://github.com/Chora666/repolens/blob/main/assets/architecture.svg) - OpenCode hook flow.
+- [`logo.svg`](https://github.com/Chora666/repolens/blob/main/assets/logo.svg) - small icon source.
+
 ## Inspiration
 
-RepoLens draws conceptual inspiration from [OpenWolf](https://github.com/cytostack/openwolf) — the idea of a project file map, learning memory, and token ledger as a "second brain" for AI coding tools. RepoLens is built from scratch for OpenCode's plugin API, not a fork or derivative.
+RepoLens draws conceptual inspiration from [OpenWolf](https://github.com/cytostack/openwolf) - the idea of a project file map, learning memory, and token ledger for AI coding tools. RepoLens is built from scratch for OpenCode's plugin API, not a fork or derivative.
 
 ## License
 

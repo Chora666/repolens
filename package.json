@@ -1,7 +1,7 @@
 {
   "name": "@chora404/repolens",
   "version": "1.0.1",
-  "description": "Repo-aware context plugin for OpenCode — file index, token tracking, learning memory",
+  "description": "Context guardrail for OpenCode: stop wasteful repeat file reads",
   "license": "MIT",
   "author": "Chora404",
   "type": "module",
@@ -16,6 +16,7 @@
     "repolens": "bin/cli.js"
   },
   "files": [
+    "assets/",
     "bin/cli.js",
     "dist/",
     "src/plugin.ts",
@@ -54,8 +55,11 @@
   "keywords": [
     "opencode",
     "plugin",
+    "context-guardrail",
+    "context-hygiene",
+    "repeat-read",
     "token-optimization",
-    "project-awareness",
+    "large-file-warning",
     "file-index"
   ],
   "repository": {
