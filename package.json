@@ -1,0 +1,69 @@
+{
+  "name": "@chora404/repolens",
+  "version": "1.0.0",
+  "description": "Repo-aware context plugin for OpenCode — file index, token tracking, learning memory",
+  "license": "MIT",
+  "author": "Chora404",
+  "type": "module",
+  "main": "dist/plugin.js",
+  "exports": {
+    ".": "./dist/plugin.js",
+    "./plugin": "./dist/plugin.js",
+    "./cli": "./bin/cli.js"
+  },
+  "types": "dist/plugin.d.ts",
+  "bin": {
+    "repolens": "bin/cli.js"
+  },
+  "files": [
+    "bin/cli.js",
+    "dist/",
+    "src/plugin.ts",
+    "templates/"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --strict --target es2022 --lib es2022,dom --module nodenext --moduleResolution nodenext --skipLibCheck src/plugin.ts",
+    "lint": "echo 'no linter configured'",
+    "build": "tsc --strict --target es2022 --lib es2022,dom --module nodenext --moduleResolution nodenext --skipLibCheck --outDir dist --declaration src/plugin.ts",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run test:unit && npm test",
+    "test": "tsx tests/run.ts",
+    "test:unit": "tsx --test src/__tests__/plugin.test.ts",
+    "trap:v2:generate": "tsx tests/generate-trap-case-v2.ts",
+    "trap:v2:gate": "tsx tests/trap-case-v2-quality-gate.ts",
+    "trap:v2:real-eval": "tsx tests/run-trap-v2-real-eval.ts",
+    "trap:v3:generate": "tsx tests/generate-trap-case-v3.ts",
+    "trap:v3:gate": "tsx tests/trap-case-v3-quality-gate.ts",
+    "trap:v3:real-eval": "REPOLENS_TRAP_CASE=v3 tsx tests/run-trap-v2-real-eval.ts",
+    "analyze:sizes": "tsx tests/file-size-distribution.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.0.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "token-optimization",
+    "project-awareness",
+    "file-index"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chora666/repolens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Chora666/repolens/issues"
+  },
+  "homepage": "https://github.com/Chora666/repolens#readme"
+}

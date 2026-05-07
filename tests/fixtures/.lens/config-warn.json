@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "token_estimation_ratio": 4,
+  "ignore_patterns": ["node_modules", ".git", "dist", "build"],
+  "ignore_extensions": [".png", ".jpg"],
+  "auto_scan_on_init": true,
+  "auto_update_anatomy": true,
+  "max_scan_files": 1000,
+  "mode": "warn"
+}
