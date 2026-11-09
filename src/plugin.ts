@@ -1138,6 +1138,21 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
           }
           break
         }
+        case "session.compacted": {
+          // Compaction drops earlier file contents from the model's context, so
+          // previous full reads no longer count: allow the model to re-read.
+          const targetId = sid || activeSessionId
+          const s = sessions.get(targetId)
+          if (!s) break
+          const trackedFiles = s.reads.size
+          s.reads.clear()
+          s.sections.clear()
+          s.largeReadWarned.clear()
+          s.largeReadBlockedOnce.clear()
+          s.largeReadRetryAllowed.clear()
+          appendMemory(projectDir, `Session ${targetId} compacted — read history reset (${trackedFiles} files)`)
+          break
+        }
         case "session.deleted": {
           try {
             if (sid) activeSessionId = sid

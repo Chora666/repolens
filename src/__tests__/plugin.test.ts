@@ -795,6 +795,50 @@ describe("RepoLensPlugin lifecycle", () => {
     }
   })
 
+  it("allows full re-reads after session compaction", async () => {
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-compaction-"))
+    fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })
+    fs.mkdirSync(path.join(projectDir, ".lens"), { recursive: true })
+    fs.writeFileSync(path.join(projectDir, "src/api.ts"), "export function api() { return 1 }\n", "utf-8")
+    fs.writeFileSync(path.join(projectDir, "src/big.ts"), "export const big = 1\n".repeat(200), "utf-8")
+    fs.writeFileSync(path.join(projectDir, ".lens", "config.json"), JSON.stringify({
+      ...defaultConfig,
+      mode: "strict",
+      large_file_policy: "strict",
+      large_file_threshold_tokens: 500,
+    }), "utf-8")
+
+    try {
+      const handlers = await RepoLensPlugin({ project: { name: "test" }, directory: projectDir } as never)
+      const sessionID = "session-compaction"
+      const otherSessionID = "session-other"
+      await handlers.event!({ event: { type: "session.created", properties: { info: { id: sessionID } } } } as never)
+
+      await fullRead(handlers, sessionID, "src/api.ts")
+      await assert.rejects(fullRead(handlers, sessionID, "src/api.ts"), /Re-reading file/)
+      await assert.rejects(fullRead(handlers, sessionID, "src/big.ts"), /Large file read/)
+      await fullRead(handlers, sessionID, "src/big.ts")
+
+      await fullRead(handlers, otherSessionID, "src/api.ts")
+
+      await handlers.event!({ event: { type: "session.compacted", properties: { sessionID } } } as never)
+
+      // Compacted session: guards start over.
+      await fullRead(handlers, sessionID, "src/api.ts")
+      await assert.rejects(fullRead(handlers, sessionID, "src/api.ts"), /Re-reading file/)
+      await assert.rejects(fullRead(handlers, sessionID, "src/big.ts"), /Large file read/)
+      await fullRead(handlers, sessionID, "src/big.ts")
+
+      // Other sessions keep their history.
+      await assert.rejects(fullRead(handlers, otherSessionID, "src/api.ts"), /Re-reading file/)
+
+      const memory = fs.readFileSync(path.join(projectDir, ".lens", "memory.md"), "utf-8")
+      assert.match(memory, /Session session-compaction compacted — read history reset \(2 files\)/)
+    } finally {
+      fs.rmSync(projectDir, { recursive: true, force: true })
+    }
+  })
+
   it("lazily creates anatomy when OpenCode does not emit session.created", async () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-lazy-anatomy-"))
     fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })
