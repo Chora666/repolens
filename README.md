@@ -10,7 +10,7 @@ usage without changing your workflow.
 
 ![RepoLens terminal preview](assets/readme-hero.svg)
 
-> **Beta Release.** RepoLens is functional and tested (33 unit + 9 integration
+> **Beta Release.** RepoLens is functional and tested (35 unit + 9 integration
 > scenarios), with real OpenCode CLI/Desktop smoke tests and DeepSeek V4 Pro
 > trap-case evals for the large-file read-interception path. Token numbers are
 > estimates and eval-scoped observations; use with awareness of the
@@ -56,7 +56,7 @@ for full details.
 
 | Evidence | Result |
 |----------|--------|
-| Unit tests | 33/33 passed |
+| Unit tests | 35/35 passed |
 | Simulation scenarios | 9/9 passed |
 | Tool calls intercepted in simulations | 30/69 |
 | Estimated reduction in repeat-read-heavy simulations | 39-49% |
@@ -205,6 +205,9 @@ The plugin intercepts file reads and prevents unnecessary re-reading.
 The interception error message includes token estimates from the anatomy index, elapsed time since the first read, and extracted key sections (TS, JS, Python, Go, Rust) so the AI can make an informed decision.
 
 When a file is written or edited, the plugin clears its read history — the file has changed, so stale section data is discarded.
+The same reset happens when a file changes outside RepoLens (shell commands, formatters, `git checkout`, your editor): each full read records the file's mtime and size, and a mismatch on the next read clears the history.
+
+In `adaptive` mode, files without an anatomy entry (created mid-session, or beyond `max_scan_files`) are sized from disk, so small unindexed files only warn on repeat reads instead of being blocked.
 
 ### Write Protection
 

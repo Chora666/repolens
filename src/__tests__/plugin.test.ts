@@ -717,6 +717,84 @@ describe("RepoLensPlugin lifecycle", () => {
     }
   })
 
+  async function fullRead(handlers: Awaited<ReturnType<typeof RepoLensPlugin>>, sessionID: string, filePath: string) {
+    await handlers["tool.execute.before"]!(
+      { tool: "Read", sessionID } as never,
+      { args: { filePath } } as never,
+    )
+    await handlers["tool.execute.after"]!(
+      { tool: "Read", sessionID, args: { filePath } } as never,
+      {} as never,
+    )
+  }
+
+  it("adaptive mode uses a size estimate for files missing from anatomy", async () => {
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-adaptive-unindexed-"))
+    fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })
+    fs.mkdirSync(path.join(projectDir, ".lens"), { recursive: true })
+    fs.writeFileSync(path.join(projectDir, ".lens", "config.json"), JSON.stringify({
+      ...defaultConfig,
+      mode: "adaptive",
+      adaptive_threshold: 500,
+      large_file_policy: "off",
+    }), "utf-8")
+
+    try {
+      const handlers = await RepoLensPlugin({ project: { name: "test" }, directory: projectDir } as never)
+      const sessionID = "session-adaptive-unindexed"
+      await handlers.event!({ event: { type: "session.created", properties: { info: { id: sessionID } } } } as never)
+
+      // Created after the anatomy scan, so neither file has an anatomy entry.
+      fs.writeFileSync(path.join(projectDir, "src/small.ts"), "export const small = 1\n", "utf-8")
+      fs.writeFileSync(path.join(projectDir, "src/big.ts"), "export const big = 1\n".repeat(200), "utf-8")
+      const anatomy = fs.readFileSync(path.join(projectDir, ".lens", "anatomy.md"), "utf-8")
+      assert.doesNotMatch(anatomy, /small\.ts|big\.ts/)
+
+      await fullRead(handlers, sessionID, "src/small.ts")
+      await fullRead(handlers, sessionID, "src/small.ts")
+
+      await fullRead(handlers, sessionID, "src/big.ts")
+      await assert.rejects(fullRead(handlers, sessionID, "src/big.ts"), /Re-reading file/)
+    } finally {
+      fs.rmSync(projectDir, { recursive: true, force: true })
+    }
+  })
+
+  it("resets repeat-read guard when a file changes outside RepoLens", async () => {
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-external-change-"))
+    fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })
+    fs.mkdirSync(path.join(projectDir, ".lens"), { recursive: true })
+    const target = path.join(projectDir, "src/api.ts")
+    fs.writeFileSync(target, "export function api() { return 1 }\n", "utf-8")
+    fs.writeFileSync(path.join(projectDir, ".lens", "config.json"), JSON.stringify({
+      ...defaultConfig,
+      mode: "strict",
+      large_file_policy: "off",
+    }), "utf-8")
+
+    try {
+      const handlers = await RepoLensPlugin({ project: { name: "test" }, directory: projectDir } as never)
+      const sessionID = "session-external-change"
+      await handlers.event!({ event: { type: "session.created", properties: { info: { id: sessionID } } } } as never)
+
+      await fullRead(handlers, sessionID, "src/api.ts")
+      await assert.rejects(fullRead(handlers, sessionID, "src/api.ts"), /Re-reading file/)
+
+      // Simulate a bash/formatter/editor change that bypasses write/edit hooks.
+      fs.writeFileSync(target, "export function api() { return 2 }\nexport const extra = true\n", "utf-8")
+      const future = new Date(Date.now() + 5000)
+      fs.utimesSync(target, future, future)
+
+      await fullRead(handlers, sessionID, "src/api.ts")
+      await assert.rejects(fullRead(handlers, sessionID, "src/api.ts"), /Re-reading file/)
+
+      const memory = fs.readFileSync(path.join(projectDir, ".lens", "memory.md"), "utf-8")
+      assert.match(memory, /File changed outside RepoLens, read history reset: src\/api\.ts/)
+    } finally {
+      fs.rmSync(projectDir, { recursive: true, force: true })
+    }
+  })
+
   it("lazily creates anatomy when OpenCode does not emit session.created", async () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "pl-lazy-anatomy-"))
     fs.mkdirSync(path.join(projectDir, "src"), { recursive: true })

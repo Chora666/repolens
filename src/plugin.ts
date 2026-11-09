@@ -110,6 +110,16 @@ interface ReadRecord {
   lastReadTime: number
   lastFullReadTime?: number
   lastRangeReadTime?: number
+  fingerprint?: string
+}
+
+function fileFingerprint(absPath: string): string | undefined {
+  try {
+    const stat = fs.statSync(absPath)
+    return `${stat.mtimeMs}:${stat.size}`
+  } catch {
+    return undefined
+  }
 }
 
 function getLensDir(projectDir: string): string {
@@ -1171,6 +1181,20 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
         const state = currentState(sid)
         let skipRepeatedReadGuard = false
 
+        // The file may have changed outside RepoLens (bash, formatter, git checkout,
+        // the user's editor). Previous full reads no longer describe its content,
+        // so reset the per-file guard state just like a write/edit would.
+        const currentFingerprint = fileFingerprint(path.join(projectDir, filePath))
+        const previousRecord = state.reads.get(filePath)
+        if (previousRecord?.fingerprint !== undefined && previousRecord.fingerprint !== currentFingerprint) {
+          state.reads.delete(filePath)
+          state.sections.delete(filePath)
+          state.largeReadWarned.delete(filePath)
+          state.largeReadBlockedOnce.delete(filePath)
+          state.largeReadRetryAllowed.delete(filePath)
+          appendMemory(projectDir, `File changed outside RepoLens, read history reset: ${filePath}`)
+        }
+
         if (!readHasRange &&
             largeFilePolicy !== "off" &&
             estimatedTokens >= largeFileThreshold &&
@@ -1238,6 +1262,7 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
             lastReadTime: now,
             lastFullReadTime: record?.lastFullReadTime,
             lastRangeReadTime: now,
+            fingerprint: record?.fingerprint,
           })
           appendMemory(projectDir, `Range read #${rangeCount}: ${filePath} (bypassed — has offset/limit)`)
           return
@@ -1250,6 +1275,7 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
           lastReadTime: now,
           lastFullReadTime: now,
           lastRangeReadTime: record?.lastRangeReadTime,
+          fingerprint: currentFingerprint,
         })
 
         if (count === 2) {
@@ -1270,7 +1296,7 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
 
           if (skipRepeatedReadGuard) {
             appendMemory(projectDir, `Repeated-read guard skipped for large full read retry: ${filePath}`)
-          } else if (shouldBlock(config, entry?.tokens)) {
+          } else if (shouldBlock(config, estimatedTokens)) {
             currentState(sid).repeatedBlocked++
             recordSessionEvent(sid, {
               tool: "read",
@@ -1302,7 +1328,7 @@ const RepoLensPlugin: Plugin = async ({ project, directory }) => {
 
           if (skipRepeatedReadGuard) {
             appendMemory(projectDir, `Repeated-read guard skipped for large full read retry: ${filePath}`)
-          } else if (shouldBlock(config, entry?.tokens)) {
+          } else if (shouldBlock(config, estimatedTokens)) {
             currentState(sid).repeatedBlocked++
             recordSessionEvent(sid, {
               tool: "read",
